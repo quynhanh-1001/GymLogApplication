@@ -6,6 +6,9 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.gymlogapplication.database.GymLogRepository;
+import com.example.gymlogapplication.database.entities.GymLog;
 import com.example.gymlogapplication.databinding.ActivityMainBinding;
 import java.util.Locale;
 import android.text.method.ScrollingMovementMethod;
@@ -14,6 +17,8 @@ import android.text.method.ScrollingMovementMethod;
 public class MainActivity extends AppCompatActivity {
 
     ActivityMainBinding binding;
+    private GymLogRepository repository;
+
 
     public static final String TAG = "QUOC_GYMLOG";
 
@@ -24,8 +29,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        repository = GymLogRepository.getRepository(getApplication());
 
         binding.logDisplayTextView.setMovementMethod(new ScrollingMovementMethod());
 
@@ -33,9 +41,15 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 getInformationFromDisplay();
+                insertGymlogRecord();
                 updateDisplay();
             }
         });
+    }
+
+    private void insertGymlogRecord(){
+        GymLog log = new GymLog(mExercise,mWeight,mReps);
+        repository.insertGymLog(log);
     }
 
 //    private void updateDisplay(){
@@ -45,19 +59,38 @@ public class MainActivity extends AppCompatActivity {
 //        binding.logDisplayTextView.setText(newDisplay);
 //    }
 
+//    private void updateDisplay() {
+//        String currentInfo = binding.logDisplayTextView.getText().toString();
+//
+//        String newDisplay = String.format(
+//                Locale.US,
+//                "Exercise: %s%nWeight: %.2f%nReps: %d%n=-=-=-= %n",
+//                mExercise, mWeight, mReps
+//        );
+//
+//        //binding.logDisplayTextView.setText(newDisplay);
+//        binding.logDisplayTextView.setText(currentInfo + newDisplay);
+//    }
+
     private void updateDisplay() {
         String currentInfo = binding.logDisplayTextView.getText().toString();
 
         String newDisplay = String.format(
                 Locale.US,
-                "Exercise: %s%nWeight: %.2f%nReps: %d%n=-=-=-= %n",
+                "Exercise: %s%nWeight: %.2f%nReps: %d%n=-=-=-=%n",
                 mExercise, mWeight, mReps
         );
 
-        //binding.logDisplayTextView.setText(newDisplay);
-        binding.logDisplayTextView.setText(currentInfo + newDisplay);
-    }
+        // If this is the first time and the TextView still has "Hello World!", remove it
+        if (currentInfo.equals("Hello World!")) {
+            currentInfo = "";
+        }
 
+        // PREPEND new data to show it at the TOP
+        String updatedText = newDisplay + currentInfo;
+
+        binding.logDisplayTextView.setText(updatedText);
+    }
 
     private void getInformationFromDisplay(){
         mExercise = binding.exerciseInputEditText.getText().toString();
